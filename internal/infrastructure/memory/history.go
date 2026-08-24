@@ -3,6 +3,7 @@ package memory
 import (
 	"context"
 	"github.com/example/asset-maintenance-service/internal/domain"
+	"maps"
 	"sort"
 	"sync"
 )
@@ -10,6 +11,13 @@ import (
 type HistoryRepository struct {
 	mu     sync.RWMutex
 	values []domain.HistoryEntry
+}
+
+func cloneHistoryEntry(v domain.HistoryEntry) domain.HistoryEntry {
+	if v.Details != nil {
+		v.Details = maps.Clone(v.Details)
+	}
+	return v
 }
 
 func NewHistoryRepository() *HistoryRepository {
@@ -30,15 +38,12 @@ func (r *HistoryRepository) List(ctx context.Context, taskID string) ([]domain.H
 	}
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	if taskID == "" {
-		return r.values, nil
-	}
 	out := []domain.HistoryEntry{}
 	for _, v := range r.values {
-		if v.TaskID == taskID {
-			out = append(out, v)
+		if taskID == "" || v.TaskID == taskID {
+			out = append(out, cloneHistoryEntry(v))
 		}
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].OccurredAt.Before(out[j].OccurredAt) })
-	return out, nil
+	return append([]domain.HistoryEntry(nil), out...), nil
 }

@@ -17,6 +17,14 @@ type MaintenanceSummary struct {
 	GeneratedAt    time.Time `json:"generated_at"`
 }
 
+func cloneTasks(tasks []domain.MaintenanceTask) []domain.MaintenanceTask {
+	result := append([]domain.MaintenanceTask(nil), tasks...)
+	for i := range result {
+		result[i].Results = append([]domain.TaskResult(nil), result[i].Results...)
+	}
+	return result
+}
+
 func (s *Service) Summary(ctx context.Context) (MaintenanceSummary, error) {
 	assets, err := s.Assets.List(ctx, domain.AssetFilter{})
 	if err != nil {
@@ -60,7 +68,7 @@ func SortTasksByPriority(tasks []domain.MaintenanceTask, findings []domain.Findi
 			priority[finding.TaskID] = severity[string(finding.Severity)]
 		}
 	}
-	result := tasks
+	result := cloneTasks(tasks)
 	sort.SliceStable(result, func(i, j int) bool {
 		if priority[result[i].ID] == priority[result[j].ID] {
 			return result[i].ScheduledAt.Before(result[j].ScheduledAt)
