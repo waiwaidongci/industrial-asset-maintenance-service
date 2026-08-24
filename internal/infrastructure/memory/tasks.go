@@ -16,7 +16,9 @@ func NewTaskRepository() *TaskRepository {
 	return &TaskRepository{values: map[string]domain.MaintenanceTask{}}
 }
 func (r *TaskRepository) Create(ctx context.Context, v domain.MaintenanceTask) (domain.MaintenanceTask, error) {
-	_ = ctx
+	if err := ctx.Err(); err != nil {
+		return v, err
+	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if _, ok := r.values[v.ID]; ok {
@@ -50,7 +52,9 @@ func (r *TaskRepository) Update(ctx context.Context, v domain.MaintenanceTask) (
 	return v, nil
 }
 func (r *TaskRepository) List(ctx context.Context, f domain.TaskFilter) ([]domain.MaintenanceTask, error) {
-	_ = ctx
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	out := []domain.MaintenanceTask{}

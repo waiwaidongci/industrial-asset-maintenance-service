@@ -52,7 +52,9 @@ func (r *PlanRepository) Update(ctx context.Context, v domain.MaintenancePlan) (
 	return v, nil
 }
 func (r *PlanRepository) List(ctx context.Context, f domain.PlanFilter) ([]domain.MaintenancePlan, error) {
-	_ = ctx
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	out := []domain.MaintenancePlan{}
