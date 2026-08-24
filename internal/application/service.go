@@ -40,7 +40,7 @@ func (s *Service) CreateAsset(ctx context.Context, a domain.Asset) (domain.Asset
 func (s *Service) GetAsset(ctx context.Context, id string) (domain.Asset, error) {
 	asset, err := s.Assets.Get(ctx, id)
 	if err != nil {
-		return asset, fmt.Errorf("get asset service: %v", err)
+		return asset, fmt.Errorf("get asset service: %w", err)
 	}
 	return asset, nil
 }
@@ -51,7 +51,7 @@ func (s *Service) UpdateAsset(ctx context.Context, a domain.Asset) (domain.Asset
 	a.UpdatedAt = s.Now()
 	updated, err := s.Assets.Update(ctx, a)
 	if err != nil {
-		return updated, fmt.Errorf("update asset service: %v", err)
+		return updated, fmt.Errorf("update asset service: %w", err)
 	}
 	return updated, nil
 }

@@ -2,14 +2,14 @@ package memory
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"github.com/example/asset-maintenance-service/internal/domain"
 	"sort"
 	"sync"
 )
 
 func assetRepositoryError(operation string, err error) error {
-	return errors.New(operation + ": " + err.Error())
+	return fmt.Errorf("%s: %w", operation, err)
 }
 
 type AssetRepository struct {

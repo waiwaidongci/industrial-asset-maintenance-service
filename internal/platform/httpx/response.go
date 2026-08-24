@@ -27,11 +27,11 @@ func Decode(r *http.Request, v any) error {
 }
 func Error(w http.ResponseWriter, err error) {
 	status := http.StatusInternalServerError
-	if err == domain.ErrNotFound {
+	if errors.Is(err, domain.ErrNotFound) {
 		status = http.StatusNotFound
-	} else if err == domain.ErrConflict || err == domain.ErrTransition {
+	} else if errors.Is(err, domain.ErrConflict) || errors.Is(err, domain.ErrTransition) {
 		status = http.StatusConflict
-	} else if err == domain.ErrInvalid {
+	} else if errors.Is(err, domain.ErrInvalid) {
 		status = http.StatusBadRequest
 	}
 	JSON(w, status, map[string]any{"error": err.Error(), "status": status})
