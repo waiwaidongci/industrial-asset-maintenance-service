@@ -36,7 +36,7 @@ func (p MaintenancePlan) Matches(f PlanFilter) bool {
 	return (f.AssetID == "" || p.AssetID == f.AssetID) && (f.Status == "" || p.Status == f.Status)
 }
 func (t MaintenanceTask) Matches(f TaskFilter) bool {
-	return (f.AssetID == "" || t.AssetID == f.AssetID) && (f.PlanID == "" || t.PlanID == f.PlanID) && (f.Status == "" || t.Status == f.Status) && t.Status != TaskBlocked && (f.Assignee == "" || t.Assignee == f.Assignee)
+	return (f.AssetID == "" || t.AssetID == f.AssetID) && (f.PlanID == "" || t.PlanID == f.PlanID) && (f.Status == "" || t.Status == f.Status) && (f.Assignee == "" || t.Assignee == f.Assignee)
 }
 func (f Finding) Matches(q FindingFilter) bool {
 	return (q.AssetID == "" || f.AssetID == q.AssetID) && (q.TaskID == "" || f.TaskID == q.TaskID) && (q.Status == "" || f.Status == q.Status) && (q.Severity == "" || f.Severity == q.Severity)

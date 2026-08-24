@@ -58,5 +58,8 @@ func (f Finding) Validate() error {
 	if f.Severity != SeverityLow && f.Severity != SeverityMedium && f.Severity != SeverityHigh && f.Severity != SeverityCritical {
 		return ErrInvalid
 	}
+	if f.Status != "" && f.Status != FindingOpen && f.Status != FindingAcknowledged && f.Status != FindingResolved && f.Status != FindingIgnored {
+		return ErrInvalid
+	}
 	return nil
 }

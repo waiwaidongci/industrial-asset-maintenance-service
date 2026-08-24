@@ -291,8 +291,7 @@ func (h *Handler) tasks(w http.ResponseWriter, r *http.Request, p []string) {
 				httpx.Error(w, e)
 				return
 			}
-			v.Status = q.Status
-			v, e = h.Svc.Tasks.Update(r.Context(), v)
+			v, e = h.Svc.ChangeTaskStatus(r.Context(), v.ID, q.Status, q.Actor, q.Notes)
 			if e != nil {
 				httpx.Error(w, e)
 				return
@@ -351,8 +350,7 @@ func (h *Handler) findings(w http.ResponseWriter, r *http.Request, p []string) {
 				httpx.Error(w, e)
 				return
 			}
-			v.Status = q.Status
-			v, e = h.Svc.Findings.Update(r.Context(), v)
+			v, e = h.Svc.ChangeFindingStatus(r.Context(), v.ID, q.Status)
 			if e != nil {
 				httpx.Error(w, e)
 				return
