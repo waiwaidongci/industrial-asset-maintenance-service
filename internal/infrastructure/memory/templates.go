@@ -15,6 +15,32 @@ type TemplateRepository struct {
 func NewTemplateRepository() *TemplateRepository {
 	return &TemplateRepository{values: map[string]domain.InspectionTemplate{}}
 }
+
+// cloneTemplate deep-copies an InspectionTemplate's nested Items slice, including
+// the pointer-valued Min/Max fields, so callers cannot mutate the repository
+// snapshot by editing the returned template. This is the boundary-isolation
+// contract for all read and write paths.
+func cloneTemplate(v domain.InspectionTemplate) domain.InspectionTemplate {
+	if len(v.Items) == 0 {
+		v.Items = nil
+		return v
+	}
+	items := make([]domain.InspectionItem, len(v.Items))
+	for i, it := range v.Items {
+		items[i] = it
+		if it.Min != nil {
+			m := *it.Min
+			items[i].Min = &m
+		}
+		if it.Max != nil {
+			m := *it.Max
+			items[i].Max = &m
+		}
+	}
+	v.Items = items
+	return v
+}
+
 func (r *TemplateRepository) Create(ctx context.Context, v domain.InspectionTemplate) (domain.InspectionTemplate, error) {
 	if err := ctx.Err(); err != nil {
 		return v, err
@@ -29,8 +55,8 @@ func (r *TemplateRepository) Create(ctx context.Context, v domain.InspectionTemp
 			return v, domain.ErrConflict
 		}
 	}
-	r.values[v.ID] = v
-	return v, nil
+	r.values[v.ID] = cloneTemplate(v)
+	return cloneTemplate(v), nil
 }
 func (r *TemplateRepository) Get(ctx context.Context, id string) (domain.InspectionTemplate, error) {
 	if err := ctx.Err(); err != nil {
@@ -42,7 +68,7 @@ func (r *TemplateRepository) Get(ctx context.Context, id string) (domain.Inspect
 	if !ok {
 		return v, domain.ErrNotFound
 	}
-	return v, nil
+	return cloneTemplate(v), nil
 }
 func (r *TemplateRepository) Update(ctx context.Context, v domain.InspectionTemplate) (domain.InspectionTemplate, error) {
 	if err := ctx.Err(); err != nil {
@@ -53,8 +79,8 @@ func (r *TemplateRepository) Update(ctx context.Context, v domain.InspectionTemp
 	if _, ok := r.values[v.ID]; !ok {
 		return v, domain.ErrNotFound
 	}
-	r.values[v.ID] = v
-	return v, nil
+	r.values[v.ID] = cloneTemplate(v)
+	return cloneTemplate(v), nil
 }
 func (r *TemplateRepository) List(ctx context.Context, active bool) ([]domain.InspectionTemplate, error) {
 	if err := ctx.Err(); err != nil {
@@ -62,12 +88,12 @@ func (r *TemplateRepository) List(ctx context.Context, active bool) ([]domain.In
 	}
 	r.mu.RLock()
 	defer r.mu.RUnlock()
-	out := []domain.InspectionTemplate{}
+	out := make([]domain.InspectionTemplate, 0, len(r.values))
 	for _, v := range r.values {
 		if active && !v.Active {
 			continue
 		}
-		out = append(out, v)
+		out = append(out, cloneTemplate(v))
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 	return out, nil
