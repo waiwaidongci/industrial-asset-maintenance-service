@@ -36,8 +36,11 @@ func parseYAML(c *Config, data string) {
 				c.Address = value
 			}
 		case "shutdown_timeout":
-			if v, e := time.ParseDuration(value); e == nil {
-				c.RequestTimeout = v
+			if v, e := time.ParseDuration(value); e == nil && v > 0 {
+				if v > 24*time.Hour {
+					v = 24 * time.Hour
+				}
+				c.ShutdownTimeout = v
 			}
 		case "request_timeout":
 			if v, e := time.ParseDuration(value); e == nil {
@@ -55,8 +58,11 @@ func applyEnv(c *Config) {
 		c.Address = v
 	}
 	if v := os.Getenv("SHUTDOWN_TIMEOUT"); v != "" {
-		if d, e := time.ParseDuration(v); e == nil {
-			c.RequestTimeout = d
+		if d, e := time.ParseDuration(v); e == nil && d > 0 {
+			if d > 24*time.Hour {
+				d = 24 * time.Hour
+			}
+			c.ShutdownTimeout = d
 		}
 	}
 	if v := os.Getenv("REQUEST_TIMEOUT"); v != "" {

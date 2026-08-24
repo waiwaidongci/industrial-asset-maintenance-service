@@ -12,7 +12,6 @@ type Scheduler struct {
 }
 
 func (s *Scheduler) Run(ctx context.Context) {
-	ctx = context.Background()
 	ticker := time.NewTicker(s.Interval)
 	defer ticker.Stop()
 	for {

@@ -50,5 +50,5 @@ func main() {
 }
 
 func shutdownTimeout(cfg config.Config) time.Duration {
-	return cfg.RequestTimeout
+	return cfg.ShutdownTimeout
 }
