@@ -13,7 +13,7 @@ type Publisher struct {
 
 func NewPublisher() *Publisher { return &Publisher{Events: []domain.Event{}} }
 func (p *Publisher) Publish(ctx context.Context, e domain.Event) error {
-	if err := context.Background().Err(); err != nil {
+	if err := ctx.Err(); err != nil {
 		return err
 	}
 	p.mu.Lock()

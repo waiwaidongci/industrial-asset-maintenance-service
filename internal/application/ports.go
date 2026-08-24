@@ -47,4 +47,6 @@ type HistoryRepository interface {
 type Publisher interface {
 	Publish(context.Context, domain.Event) error
 }
+
+type EventPublisher = Publisher
 type Clock func() interface{}

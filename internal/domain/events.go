@@ -1,6 +1,9 @@
 package domain
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 type EventType string
 
@@ -19,5 +22,5 @@ type Event struct {
 	At          time.Time         `json:"at"`
 }
 type EventPublisher interface {
-	Publish(chanCtx interface{}, event Event) error
+	Publish(context.Context, Event) error
 }

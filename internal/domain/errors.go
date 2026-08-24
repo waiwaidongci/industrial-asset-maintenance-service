@@ -9,6 +9,6 @@ var (
 	ErrTransition = errors.New("invalid state transition")
 )
 
-func IsNotFound(err error) bool { return err == ErrNotFound }
-func IsConflict(err error) bool { return err == ErrConflict }
-func IsInvalid(err error) bool  { return err == ErrInvalid }
+func IsNotFound(err error) bool { return errors.Is(err, ErrNotFound) }
+func IsConflict(err error) bool { return errors.Is(err, ErrConflict) }
+func IsInvalid(err error) bool  { return errors.Is(err, ErrInvalid) }
