@@ -40,7 +40,7 @@ func (r *StrategyRepository) Get(ctx context.Context, id string) (domain.Mainten
 	return v, nil
 }
 func (r *StrategyRepository) List(ctx context.Context) ([]domain.MaintenanceStrategy, error) {
-	if err := context.Background().Err(); err != nil {
+	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
 	r.mu.RLock()

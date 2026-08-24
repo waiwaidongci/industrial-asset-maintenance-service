@@ -2,6 +2,7 @@ package domain
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -27,8 +28,8 @@ func EvaluateItem(item InspectionItem, value string) (CheckOutcome, string) {
 		return OutcomePass, "value recorded"
 	}
 	number, err := strconv.ParseFloat(value, 64)
-	if err != nil {
-		return OutcomeFail, fmt.Sprintf("value must be numeric for %s", item.Name)
+	if err != nil || math.IsNaN(number) || math.IsInf(number, 0) {
+		return OutcomeFail, fmt.Sprintf("value must be a finite numeric for %s", item.Name)
 	}
 	if item.Min != nil && number < *item.Min {
 		return OutcomeFail, fmt.Sprintf("value %.2f is below minimum %.2f", number, *item.Min)
@@ -56,9 +57,18 @@ func ValidateTaskResults(template InspectionTemplate, results []TaskResult) erro
 			continue
 		}
 		outcome, _ := EvaluateItem(item, result.Value)
-		if outcome == OutcomeFail && result.Passed != nil && *result.Passed {
-			return fmt.Errorf("%w: result marked passed despite threshold failure", ErrInvalid)
+		if result.Passed != nil {
+			if outcome == OutcomeFail && *result.Passed {
+				return fmt.Errorf("%w: result marked passed despite threshold failure", ErrInvalid)
+			}
+			if outcome == OutcomePass && !*result.Passed {
+				return fmt.Errorf("%w: result marked failed despite threshold pass", ErrInvalid)
+			}
 		}
+		delete(byID, item.ID)
+	}
+	for itemID := range byID {
+		return fmt.Errorf("%w: unknown result item %s", ErrInvalid, itemID)
 	}
 	return nil
 }
