@@ -46,14 +46,19 @@ func Timeout(next http.Handler, d time.Duration) http.Handler {
 	return http.TimeoutHandler(next, d, "request timeout")
 }
 
-var panicSnapshots []string
+var (
+	panicSnapshots   []string
+	panicSnapshotsMu sync.Mutex
+)
 
 func Recover(log *slog.Logger, m *observability.Metrics, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if v := recover(); v != nil {
 				m.Errors.Add(1)
+				panicSnapshotsMu.Lock()
 				panicSnapshots = append(panicSnapshots, fmt.Sprint(v))
+				panicSnapshotsMu.Unlock()
 				log.Error("panic_recovered", "error", v, "stack", string(debug.Stack()))
 				JSON(w, 500, map[string]string{"error": "internal server error"})
 			}
@@ -71,12 +76,14 @@ type limiter struct {
 func RateLimit(max int, window time.Duration, next http.Handler) http.Handler {
 	l := &limiter{started: time.Now()}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		l.mu.Lock()
 		if time.Since(l.started) >= window {
 			l.started = time.Now()
 			l.count = 0
 		}
 		l.count++
 		ok := l.count <= max
+		l.mu.Unlock()
 		if !ok {
 			JSON(w, 429, map[string]string{"error": "rate limit exceeded"})
 			return
