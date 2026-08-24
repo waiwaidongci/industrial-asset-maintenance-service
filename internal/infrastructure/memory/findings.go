@@ -19,14 +19,20 @@ func (r *FindingRepository) Create(ctx context.Context, v domain.Finding) (domai
 	if err := ctx.Err(); err != nil {
 		return v, err
 	}
+	if !domain.IsKnownFindingStatus(v.Status) {
+		return v, domain.ErrInvalid
+	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if _, ok := r.values[v.ID]; ok {
 		return v, domain.ErrConflict
 	}
 	for _, x := range r.values {
-		if x.TaskID == v.TaskID && x.Title == v.Title && x.Status != domain.FindingResolved {
-			return x, nil
+		if x.TaskID != v.TaskID || x.Title != v.Title {
+			continue
+		}
+		if domain.IsActiveFindingStatus(x.Status) {
+			return v, domain.ErrConflict
 		}
 	}
 	r.values[v.ID] = v
@@ -48,6 +54,9 @@ func (r *FindingRepository) Update(ctx context.Context, v domain.Finding) (domai
 	if err := ctx.Err(); err != nil {
 		return v, err
 	}
+	if !domain.IsKnownFindingStatus(v.Status) {
+		return v, domain.ErrInvalid
+	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	if _, ok := r.values[v.ID]; !ok {
@@ -64,6 +73,9 @@ func (r *FindingRepository) List(ctx context.Context, f domain.FindingFilter) ([
 	defer r.mu.RUnlock()
 	out := []domain.Finding{}
 	for _, v := range r.values {
+		if !domain.IsKnownFindingStatus(v.Status) {
+			return nil, domain.ErrInvalid
+		}
 		if v.Matches(f) {
 			out = append(out, v)
 		}

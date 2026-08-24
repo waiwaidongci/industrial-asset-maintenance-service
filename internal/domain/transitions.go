@@ -43,7 +43,7 @@ func TransitionPlan(p *MaintenancePlan, to PlanStatus) error {
 func CanFindingTransition(from, to FindingStatus) bool {
 	switch from {
 	case FindingOpen:
-		return to == FindingAcknowledged || to == FindingResolved || to == FindingIgnored
+		return to == FindingAcknowledged || to == FindingIgnored
 	case FindingAcknowledged:
 		return to == FindingResolved || to == FindingIgnored
 	case FindingResolved, FindingIgnored:
@@ -51,6 +51,27 @@ func CanFindingTransition(from, to FindingStatus) bool {
 	}
 	return false
 }
+
+func IsActiveFindingStatus(status FindingStatus) bool {
+	switch status {
+	case FindingOpen, FindingAcknowledged:
+		return true
+	case FindingResolved, FindingIgnored:
+		return false
+	default:
+		return false
+	}
+}
+
+func IsKnownFindingStatus(status FindingStatus) bool {
+	switch status {
+	case FindingOpen, FindingAcknowledged, FindingResolved, FindingIgnored:
+		return true
+	default:
+		return false
+	}
+}
+
 func TransitionFinding(f *Finding, to FindingStatus) error {
 	if f == nil || !CanFindingTransition(f.Status, to) {
 		return fmt.Errorf("%w: finding %s to %s", ErrTransition, f.Status, to)
